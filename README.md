@@ -1,4 +1,7 @@
 # operation_abundance_eden_project
+
+[![CI Build Status](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/CramerConsultingGroup/operation_abundance_eden_project/main/reports/metrics.json)](https://github.com/CramerConsultingGroup/operation_abundance_eden_project/actions/workflows/smoke_test.yml)
+
 Project and investor place holder 
 
 ## CI Notifications
@@ -57,4 +60,45 @@ The notification workflow is defined in `.github/workflows/notify_ci.yml` and ru
 - Manual trigger via workflow dispatch
 
 Both Slack and Discord notifications are optional and will only be sent if the corresponding webhook URL secret is configured. The workflow will continue to run successfully even if no webhooks are configured.
+
+## CI Build Status and Analysis
+
+This repository includes automated CI build analysis that monitors the "CI — Build Sample Investor PDF (Smoke Test)" workflow and generates comprehensive reports.
+
+### Build Status Badge
+
+The badge at the top of this README shows the current build status and is automatically updated after each workflow run. It uses [Shields.io](https://shields.io/) dynamic badges powered by the `reports/metrics.json` file.
+
+**Note**: The badge always reflects the status of the `main` branch, regardless of which branch you're viewing. This provides a consistent indication of the production build health.
+
+### Automated Reports
+
+After each smoke test run, the analysis workflow automatically:
+
+1. **Generates Reports**
+   - `reports/ci_latest.md` - Human-readable Markdown summary with workflow details
+   - `reports/metrics.json` - JSON metrics in Shields.io endpoint format
+
+2. **Comments on Pull Requests**
+   - Automatically adds/updates a comment on the PR with build results
+   - Includes workflow status, run details, and quick links
+
+3. **Copies to GitHub Pages** (if applicable)
+   - If a `docs/` directory exists, copies `metrics.json` for GitHub Pages badge support
+
+### How It Works
+
+The analysis workflow is triggered automatically when the smoke test workflow completes:
+
+```
+Smoke Test Workflow → Completes → Analysis Workflow → Generates Reports → Updates PR
+```
+
+### Files
+
+- `.github/workflows/smoke_test.yml` - Main smoke test workflow
+- `.github/workflows/analyze_smoke_test.yml` - Analysis workflow (triggered on smoke test completion)
+- `.github/scripts/analyze_workflow.py` - Python analyzer that generates reports
+- `reports/ci_latest.md` - Latest build status report
+- `reports/metrics.json` - Badge metrics (Shields.io format)
 
