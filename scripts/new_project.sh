@@ -68,7 +68,6 @@ Additional documentation can be found in the \`docs/\` directory.
 ## Getting Started
 
 [Add instructions for getting started with this project]
-
 EOF
 
 # Create a basic project info file
@@ -105,7 +104,6 @@ cat > "$PROJECT_PATH/docs/overview.md" << EOF
 ## Notes
 
 [Add any additional notes]
-
 EOF
 
 echo "✓ Project created successfully at: $PROJECT_PATH"

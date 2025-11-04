@@ -28,4 +28,3 @@ Additional documentation can be found in the `docs/` directory.
 ## Getting Started
 
 [Add instructions for getting started with this project]
-
