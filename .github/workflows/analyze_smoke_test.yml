@@ -47,6 +47,9 @@ jobs:
           python trusted-scripts/.github/scripts/analyze_workflow.py
 
       - name: Checkout PR branch for committing reports
+        # Security note: This checks out potentially untrusted code, but only for file operations.
+        # We do not execute any code from this checkout. All analysis uses the trusted script
+        # from the main branch. This checkout is necessary to commit reports back to the PR.
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -169,16 +172,21 @@ jobs:
 
       - name: Summary
         if: always()
+        env:
+          BRANCH_NAME: ${{ env.BRANCH }}
+          WORKFLOW: ${{ env.WORKFLOW_NAME }}
+          RUN: ${{ env.RUN_ID }}
+          STATUS: ${{ env.CONCLUSION }}
         run: |
           echo "### Smoke Test Analysis Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Workflow**: ${{ env.WORKFLOW_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Run ID**: ${{ env.RUN_ID }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Conclusion**: ${{ env.CONCLUSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: ${{ env.BRANCH }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workflow**: ${WORKFLOW}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID**: ${RUN}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Conclusion**: ${STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${BRANCH_NAME}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📊 Reports generated in \`reports/\` directory" >> $GITHUB_STEP_SUMMARY
-          if [ -d "docs" ]; then
+          if [ -d "pr-branch/docs" ]; then
             echo "📋 Metrics copied to \`docs/metrics.json\`" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -n "${{ steps.find_pr.outputs.pr_number }}" ]; then
