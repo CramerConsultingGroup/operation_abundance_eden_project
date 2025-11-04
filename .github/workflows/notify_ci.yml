@@ -1,0 +1,201 @@
+name: CI Notifications
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  sample-pdf-smoke-test:
+    name: Sample PDF Building Smoke Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup test environment
+        run: |
+          echo "Setting up PDF building test environment..."
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-base \
+            texlive-fonts-recommended
+
+      - name: Create sample PDF
+        id: build-pdf
+        run: |
+          echo "# Sample PDF Document" > sample.md
+          echo "This is a test document for CI smoke testing." >> sample.md
+          pandoc sample.md -o sample.pdf
+
+          if [ -f sample.pdf ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=PDF built successfully" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=PDF build failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Upload PDF artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-pdf
+          path: sample.pdf
+
+      - name: Notify Slack
+        if: always() && secrets.SLACK_WEBHOOK_URL
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not set, skipping Slack notification"
+            exit 0
+          fi
+
+          # Extract short commit SHA
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+
+          # Determine status color
+          if [ "${{ steps.build-pdf.outcome }}" == "success" ]; then
+            COLOR="good"
+            STATUS="✅ Success"
+          else
+            COLOR="danger"
+            STATUS="❌ Failed"
+          fi
+
+          # Build JSON payload
+          JSON_PAYLOAD=$(cat <<EOF
+          {
+            "attachments": [
+              {
+                "color": "$COLOR",
+                "title": "CI Build Notification",
+                "fields": [
+                  {
+                    "title": "Repository",
+                    "value": "${{ github.repository }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.ref_name }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Status",
+                    "value": "$STATUS",
+                    "short": true
+                  },
+                  {
+                    "title": "Job",
+                    "value": "Sample PDF Building Smoke Test",
+                    "short": true
+                  },
+                  {
+                    "title": "Commit",
+                    "value": "$SHORT_SHA",
+                    "short": true
+                  },
+                  {
+                    "title": "Author",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  }
+                ],
+                "footer": "GitHub Actions",
+                "ts": $(date +%s)
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$JSON_PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
+
+      - name: Notify Discord
+        if: always() && secrets.DISCORD_WEBHOOK_URL
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL not set, skipping Discord notification"
+            exit 0
+          fi
+
+          # Extract short commit SHA
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+
+          # Determine status emoji
+          if [ "${{ steps.build-pdf.outcome }}" == "success" ]; then
+            STATUS="✅ Success"
+            COLOR=3066993
+          else
+            STATUS="❌ Failed"
+            COLOR=15158332
+          fi
+
+          # Build JSON payload for Discord
+          JSON_PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [
+              {
+                "title": "CI Build Notification",
+                "color": $COLOR,
+                "fields": [
+                  {
+                    "name": "Repository",
+                    "value": "${{ github.repository }}",
+                    "inline": true
+                  },
+                  {
+                    "name": "Branch",
+                    "value": "${{ github.ref_name }}",
+                    "inline": true
+                  },
+                  {
+                    "name": "Status",
+                    "value": "$STATUS",
+                    "inline": true
+                  },
+                  {
+                    "name": "Job",
+                    "value": "Sample PDF Building Smoke Test",
+                    "inline": true
+                  },
+                  {
+                    "name": "Commit",
+                    "value": "\`$SHORT_SHA\`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Author",
+                    "value": "${{ github.actor }}",
+                    "inline": true
+                  }
+                ],
+                "footer": {
+                  "text": "GitHub Actions"
+                },
+                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$JSON_PAYLOAD" \
+            "$DISCORD_WEBHOOK_URL"
