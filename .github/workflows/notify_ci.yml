@@ -1,12 +1,10 @@
 name: CI Notifications
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI — Build Sample Investor PDF (Smoke Test)"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
@@ -31,13 +29,35 @@ jobs:
         if: always()
         id: workflow_status
         run: |
-          # For basic notification tracking, we report success
-          # To track actual workflow failures, add failure detection logic here
-          # or run this workflow as a separate job that depends on other jobs
-          echo "status=success" >> $GITHUB_OUTPUT
-          echo "color=good" >> $GITHUB_OUTPUT
-          echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
-          echo "discord_color=3066993" >> $GITHUB_OUTPUT
+          # Detect status from the triggering workflow_run event
+          conclusion="${{ github.event.workflow_run.conclusion }}"
+          if [ "$conclusion" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+            echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
+            echo "discord_color=3066993" >> $GITHUB_OUTPUT
+          elif [ "$conclusion" == "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+            echo "emoji=:x:" >> $GITHUB_OUTPUT
+            echo "discord_color=15158332" >> $GITHUB_OUTPUT
+          elif [ "$conclusion" == "cancelled" ]; then
+            echo "status=cancelled" >> $GITHUB_OUTPUT
+            echo "color=warning" >> $GITHUB_OUTPUT
+            echo "emoji=:warning:" >> $GITHUB_OUTPUT
+            echo "discord_color=16776960" >> $GITHUB_OUTPUT
+          elif [ "$conclusion" == "skipped" ] || [ "$conclusion" == "timed_out" ]; then
+            echo "status=$conclusion" >> $GITHUB_OUTPUT
+            echo "color=warning" >> $GITHUB_OUTPUT
+            echo "emoji=:warning:" >> $GITHUB_OUTPUT
+            echo "discord_color=16776960" >> $GITHUB_OUTPUT
+          else
+            # Default to success for manual triggers or unknown states
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+            echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
+            echo "discord_color=3066993" >> $GITHUB_OUTPUT
+          fi
 
       - name: Notify Slack
         if: always() && secrets.SLACK_WEBHOOK_URL != ''
