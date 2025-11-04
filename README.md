@@ -42,12 +42,12 @@ SLACK_WEBHOOK_URL=your_slack_url DISCORD_WEBHOOK_URL=your_discord_url make notif
 
 The CI notifications include the following information:
 - Repository name
-- Branch name
+- Branch name (properly handles both pushes and pull requests)
 - Commit SHA (shortened)
 - Commit author
-- Job status (success/failure/warning)
+- Workflow status (currently always reports success for basic notification tracking)
 - Commit message
-- Timestamp
+- Timestamp (Discord notifications only)
 
 ### Workflow File
 

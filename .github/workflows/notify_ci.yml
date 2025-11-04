@@ -22,13 +22,16 @@ jobs:
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "author=$(git log -1 --pretty=format:'%an')" >> $GITHUB_OUTPUT
           echo "message=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
-          echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+          # Use head_ref for PRs, ref_name for pushes
+          echo "branch=${{ github.head_ref || github.ref_name }}" >> $GITHUB_OUTPUT
 
       - name: Determine workflow status
         if: always()
         id: workflow_status
         run: |
-          # This step always runs and checks status of previous steps
+          # For basic notification tracking, we report success
+          # To track actual workflow failures, add failure detection logic here
+          # or run this workflow as a separate job that depends on other jobs
           echo "status=success" >> $GITHUB_OUTPUT
           echo "color=good" >> $GITHUB_OUTPUT
           echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
