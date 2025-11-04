@@ -48,7 +48,7 @@ jobs:
           path: sample.pdf
 
       - name: Notify Slack
-        if: always() && env.SLACK_WEBHOOK_URL != ''
+        if: always() && secrets.SLACK_WEBHOOK_URL != ''
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
@@ -118,7 +118,7 @@ jobs:
             "$SLACK_WEBHOOK_URL"
 
       - name: Notify Discord
-        if: always() && env.DISCORD_WEBHOOK_URL != ''
+        if: always() && secrets.DISCORD_WEBHOOK_URL != ''
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
