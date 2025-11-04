@@ -1,6 +1,36 @@
 # operation_abundance_eden_project
 Project and investor place holder 
 
+## Managing Projects
+
+This repository provides an easy way to create and manage projects.
+
+### Creating a New Project
+
+To add a new project to the repository, use the project creation script:
+
+```bash
+./scripts/new_project.sh "Your Project Name"
+```
+
+This will create a complete project structure with:
+- Project README with documentation
+- Metadata file (project.json)
+- Documentation directory
+- Source code directory
+- Assets directory
+
+For more details on managing projects, see the [Projects Documentation](projects/README.md).
+
+### Project Structure
+
+All projects are organized in the `projects/` directory. Each project has:
+- **README.md** - Main project documentation
+- **project.json** - Structured project metadata
+- **docs/** - Additional documentation
+- **src/** - Source code and implementation files
+- **assets/** - Images, files, and other resources
+
 ## CI Notifications
 
 This repository includes automated CI notifications that integrate with Slack and Discord. Notifications are triggered on pushes to the `main` branch, pull requests targeting `main`, or can be manually triggered via the workflow dispatch.
