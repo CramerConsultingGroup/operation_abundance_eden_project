@@ -1,0 +1,161 @@
+name: CI Notifications
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get commit info
+        id: commit_info
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "author=$(git log -1 --pretty=format:'%an')" >> $GITHUB_OUTPUT
+          echo "message=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
+          echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+
+      - name: Set job status
+        id: job_status
+        run: |
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "color=good" >> $GITHUB_OUTPUT
+          echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
+
+      - name: Notify Slack
+        if: always() && secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "CI Pipeline Notification",
+              "attachments": [
+                {
+                  "color": "${{ steps.job_status.outputs.color }}",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": "${{ github.repository }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Branch",
+                      "value": "${{ steps.commit_info.outputs.branch }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ steps.commit_info.outputs.sha_short }}>",
+                      "short": true
+                    },
+                    {
+                      "title": "Author",
+                      "value": "${{ steps.commit_info.outputs.author }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Status",
+                      "value": "${{ steps.job_status.outputs.emoji }} ${{ steps.job_status.outputs.status }}",
+                      "short": false
+                    },
+                    {
+                      "title": "Message",
+                      "value": "${{ steps.commit_info.outputs.message }}",
+                      "short": false
+                    }
+                  ],
+                  "footer": "GitHub Actions",
+                  "footer_icon": "https://github.githubassets.com/favicon.ico",
+                  "ts": ${{ github.event.head_commit.timestamp }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Discord
+        if: always() && secrets.DISCORD_WEBHOOK_URL != ''
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          # Determine status emoji for Discord
+          if [ "${{ job.status }}" == "success" ]; then
+            emoji=":white_check_mark:"
+            color=3066993
+          elif [ "${{ job.status }}" == "failure" ]; then
+            emoji=":x:"
+            color=15158332
+          else
+            emoji=":warning:"
+            color=16776960
+          fi
+
+          # Send Discord notification
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"CI Pipeline Notification\",
+                \"color\": $color,
+                \"fields\": [
+                  {
+                    \"name\": \"Repository\",
+                    \"value\": \"${{ github.repository }}\",
+                    \"inline\": true
+                  },
+                  {
+                    \"name\": \"Branch\",
+                    \"value\": \"${{ steps.commit_info.outputs.branch }}\",
+                    \"inline\": true
+                  },
+                  {
+                    \"name\": \"Commit\",
+                    \"value\": \"[\`${{ steps.commit_info.outputs.sha_short }}\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\",
+                    \"inline\": true
+                  },
+                  {
+                    \"name\": \"Author\",
+                    \"value\": \"${{ steps.commit_info.outputs.author }}\",
+                    \"inline\": true
+                  },
+                  {
+                    \"name\": \"Status\",
+                    \"value\": \"$emoji ${{ job.status }}\",
+                    \"inline\": false
+                  },
+                  {
+                    \"name\": \"Message\",
+                    \"value\": \"${{ steps.commit_info.outputs.message }}\",
+                    \"inline\": false
+                  }
+                ],
+                \"footer\": {
+                  \"text\": \"GitHub Actions\"
+                },
+                \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+              }]
+            }" \
+            "$DISCORD_WEBHOOK_URL" || echo "Failed to send Discord notification (non-fatal)"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### CI Notification Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ steps.commit_info.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ steps.commit_info.outputs.sha_short }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author**: ${{ steps.commit_info.outputs.author }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ steps.job_status.outputs.emoji }} ${{ steps.job_status.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Slack Notification**: ${{ secrets.SLACK_WEBHOOK_URL != '' && 'Sent' || 'Skipped (no webhook configured)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Discord Notification**: ${{ secrets.DISCORD_WEBHOOK_URL != '' && 'Sent' || 'Skipped (no webhook configured)' }}" >> $GITHUB_STEP_SUMMARY
