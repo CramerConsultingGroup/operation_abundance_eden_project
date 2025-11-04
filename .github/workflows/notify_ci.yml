@@ -57,6 +57,10 @@ jobs:
             exit 0
           fi
 
+          # Extract short commit SHA
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+
           # Determine status color
           if [ "${{ steps.build-pdf.outcome }}" == "success" ]; then
             COLOR="good"
@@ -96,7 +100,7 @@ jobs:
                   },
                   {
                     "title": "Commit",
-                    "value": "${{ github.sha }}",
+                    "value": "$SHORT_SHA",
                     "short": true
                   },
                   {
@@ -126,6 +130,10 @@ jobs:
             echo "DISCORD_WEBHOOK_URL not set, skipping Discord notification"
             exit 0
           fi
+
+          # Extract short commit SHA
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
 
           # Determine status emoji
           if [ "${{ steps.build-pdf.outcome }}" == "success" ]; then
@@ -166,7 +174,7 @@ jobs:
                   },
                   {
                     "name": "Commit",
-                    "value": "\`${{ github.sha }}\`",
+                    "value": "\`$SHORT_SHA\`",
                     "inline": true
                   },
                   {
