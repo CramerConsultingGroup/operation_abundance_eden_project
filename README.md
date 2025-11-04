@@ -69,6 +69,8 @@ This repository includes automated CI build analysis that monitors the "CI — B
 
 The badge at the top of this README shows the current build status and is automatically updated after each workflow run. It uses [Shields.io](https://shields.io/) dynamic badges powered by the `reports/metrics.json` file.
 
+**Note**: The badge always reflects the status of the `main` branch, regardless of which branch you're viewing. This provides a consistent indication of the production build health.
+
 ### Automated Reports
 
 After each smoke test run, the analysis workflow automatically:

@@ -69,12 +69,11 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Update CI analysis reports [skip ci]"
-            # Only push if there are local commits that haven't been pushed
-            if git rev-parse @{u} > /dev/null 2>&1; then
-              git push origin ${{ github.event.workflow_run.head_branch }}
-            else
-              echo "No upstream branch configured, skipping push"
-            fi
+            # Attempt to push, but don't fail the workflow if push fails
+            git push origin ${{ github.event.workflow_run.head_branch }} || {
+              echo "Warning: Push failed. This may happen if the branch is protected or if there are concurrent updates."
+              exit 0
+            }
           fi
 
       - name: Find PR number
