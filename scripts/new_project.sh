@@ -13,8 +13,9 @@ if [ -z "$1" ]; then
 fi
 
 PROJECT_NAME="$1"
-# Convert project name to a valid directory name (lowercase, replace spaces with underscores)
-PROJECT_DIR=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+# Convert project name to a valid directory name (lowercase, replace spaces/special chars with underscores)
+# Remove leading/trailing spaces, convert to lowercase, replace spaces and special chars with underscores
+PROJECT_DIR=$(echo "$PROJECT_NAME" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\+/_/g' | sed 's/^_\+\|_\+$//')
 
 # Base directory for projects
 PROJECTS_BASE="projects"
@@ -49,7 +50,7 @@ This is the $PROJECT_NAME project.
 
 ## Status
 
-- **Created**: $(date +%Y-%m-%d)
+- **Created**: $(date -u +%Y-%m-%d)
 - **Status**: Active
 
 ## Team
