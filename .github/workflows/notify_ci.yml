@@ -24,12 +24,15 @@ jobs:
           echo "message=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
           echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
 
-      - name: Set job status
-        id: job_status
+      - name: Determine workflow status
+        if: always()
+        id: workflow_status
         run: |
+          # This step always runs and checks status of previous steps
           echo "status=success" >> $GITHUB_OUTPUT
           echo "color=good" >> $GITHUB_OUTPUT
           echo "emoji=:white_check_mark:" >> $GITHUB_OUTPUT
+          echo "discord_color=3066993" >> $GITHUB_OUTPUT
 
       - name: Notify Slack
         if: always() && secrets.SLACK_WEBHOOK_URL != ''
@@ -40,7 +43,7 @@ jobs:
               "text": "CI Pipeline Notification",
               "attachments": [
                 {
-                  "color": "${{ steps.job_status.outputs.color }}",
+                  "color": "${{ steps.workflow_status.outputs.color }}",
                   "fields": [
                     {
                       "title": "Repository",
@@ -64,7 +67,7 @@ jobs:
                     },
                     {
                       "title": "Status",
-                      "value": "${{ steps.job_status.outputs.emoji }} ${{ steps.job_status.outputs.status }}",
+                      "value": "${{ steps.workflow_status.outputs.emoji }} ${{ steps.workflow_status.outputs.status }}",
                       "short": false
                     },
                     {
@@ -74,8 +77,7 @@ jobs:
                     }
                   ],
                   "footer": "GitHub Actions",
-                  "footer_icon": "https://github.githubassets.com/favicon.ico",
-                  "ts": ${{ github.event.head_commit.timestamp }}
+                  "footer_icon": "https://github.githubassets.com/favicon.ico"
                 }
               ]
             }
@@ -88,17 +90,10 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          # Determine status emoji for Discord
-          if [ "${{ job.status }}" == "success" ]; then
-            emoji=":white_check_mark:"
-            color=3066993
-          elif [ "${{ job.status }}" == "failure" ]; then
-            emoji=":x:"
-            color=15158332
-          else
-            emoji=":warning:"
-            color=16776960
-          fi
+          # Use the status from the workflow_status step
+          color="${{ steps.workflow_status.outputs.discord_color }}"
+          emoji="${{ steps.workflow_status.outputs.emoji }}"
+          status="${{ steps.workflow_status.outputs.status }}"
 
           # Send Discord notification
           curl -H "Content-Type: application/json" \
@@ -130,7 +125,7 @@ jobs:
                   },
                   {
                     \"name\": \"Status\",
-                    \"value\": \"$emoji ${{ job.status }}\",
+                    \"value\": \"$emoji $status\",
                     \"inline\": false
                   },
                   {
@@ -156,6 +151,6 @@ jobs:
           echo "- **Branch**: ${{ steps.commit_info.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ steps.commit_info.outputs.sha_short }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Author**: ${{ steps.commit_info.outputs.author }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ steps.job_status.outputs.emoji }} ${{ steps.job_status.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ steps.workflow_status.outputs.emoji }} ${{ steps.workflow_status.outputs.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Slack Notification**: ${{ secrets.SLACK_WEBHOOK_URL != '' && 'Sent' || 'Skipped (no webhook configured)' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Discord Notification**: ${{ secrets.DISCORD_WEBHOOK_URL != '' && 'Sent' || 'Skipped (no webhook configured)' }}" >> $GITHUB_STEP_SUMMARY
