@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "label": "build",
+  "message": "unknown",
+  "color": "lightgrey",
+  "namedLogo": "github",
+  "logoColor": "white",
+  "style": "flat",
+  "cacheSeconds": 300
+}

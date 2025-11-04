@@ -1,4 +1,7 @@
 # operation_abundance_eden_project
+
+[![CI Build Status](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/CramerConsultingGroup/operation_abundance_eden_project/main/reports/metrics.json)](https://github.com/CramerConsultingGroup/operation_abundance_eden_project/actions/workflows/smoke_test.yml)
+
 Project and investor place holder 
 
 ## CI Notifications
