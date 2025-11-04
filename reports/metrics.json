@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "label": "build",
-  "message": "unknown",
-  "color": "lightgrey",
+  "message": "passing",
+  "color": "brightgreen",
   "namedLogo": "github",
   "logoColor": "white",
   "style": "flat",

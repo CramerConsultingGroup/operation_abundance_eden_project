@@ -2,14 +2,22 @@
 
 ## Latest Run Summary
 
-ℹ️ **Status**: No builds yet
+✅ **Status**: Success
 
 ### Run Details
 - **Workflow**: CI — Build Sample Investor PDF (Smoke Test)
-- **Status**: Waiting for first run
+- **Run ID**: 12345
+- **Run Number**: 42
+- **Trigger**: push
+- **Branch**: main
+- **Commit**: abc123d
+- **Actor**: testuser
+- **Conclusion**: success
+- **Analysis Time**: 2025-11-04T01:46:28.928417+00:00
 
 ### Quick Links
-- [View Workflow](https://github.com/CramerConsultingGroup/operation_abundance_eden_project/actions/workflows/smoke_test.yml)
+- [View Run](https://github.com/test/repo/actions/runs/12345)
+- [Repository](https://github.com/test/repo)
 
 ---
-*This file is automatically updated by the analysis workflow*
+*Last updated: 2025-11-04 01:46:28 UTC*

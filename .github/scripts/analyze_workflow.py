@@ -140,13 +140,6 @@ def main():
     else:
         print("ℹ️  docs/ directory not found, skipping copy")
     
-    # Output summary for PR comment (to stdout for capture)
-    print("\n" + "="*50)
-    print("PR COMMENT CONTENT:")
-    print("="*50)
-    print(markdown_summary)
-    print("="*50)
-    
     return 0
 
 

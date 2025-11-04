@@ -42,7 +42,6 @@ jobs:
 
       - name: Run analyzer
         run: |
-          chmod +x .github/scripts/analyze_workflow.py
           python .github/scripts/analyze_workflow.py
 
       - name: Capture PR comment content
@@ -70,7 +69,12 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Update CI analysis reports [skip ci]"
-            git push origin ${{ github.event.workflow_run.head_branch }} || echo "Push failed or no changes"
+            # Only push if there are local commits that haven't been pushed
+            if git rev-parse @{u} > /dev/null 2>&1; then
+              git push origin ${{ github.event.workflow_run.head_branch }}
+            else
+              echo "No upstream branch configured, skipping push"
+            fi
           fi
 
       - name: Find PR number
