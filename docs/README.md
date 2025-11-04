@@ -7,7 +7,6 @@ Welcome to the Operation Abundance Eden Project documentation.
 - [Getting Started](getting-started.md) - How to get started with the project
 - [Architecture](architecture.md) - Technical architecture and design decisions
 - [Development Guide](development.md) - Guide for developers contributing to the project
-- [Deployment](deployment.md) - Deployment and operations guide
 
 ## Quick Links
 
