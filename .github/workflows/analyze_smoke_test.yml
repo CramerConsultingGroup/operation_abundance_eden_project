@@ -15,11 +15,11 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout main branch for analyzer script
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+          path: trusted-scripts
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -44,7 +44,23 @@ jobs:
 
       - name: Run analyzer
         run: |
-          python .github/scripts/analyze_workflow.py
+          python trusted-scripts/.github/scripts/analyze_workflow.py
+
+      - name: Checkout PR branch for committing reports
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: pr-branch
+
+      - name: Copy reports to PR branch
+        run: |
+          mkdir -p pr-branch/reports
+          cp reports/ci_latest.md pr-branch/reports/
+          cp reports/metrics.json pr-branch/reports/
+          if [ -d "pr-branch/docs" ]; then
+            cp reports/metrics.json pr-branch/docs/
+          fi
 
       - name: Capture PR comment content
         id: pr_comment
@@ -55,11 +71,13 @@ jobs:
           fi
 
       - name: Configure Git
+        working-directory: pr-branch
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Commit and push reports
+        working-directory: pr-branch
         env:
           BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
         run: |
