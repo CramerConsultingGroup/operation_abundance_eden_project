@@ -45,15 +45,14 @@ The CI notifications include the following information:
 - Branch name (properly handles both pushes and pull requests)
 - Commit SHA (shortened)
 - Commit author
-- Workflow status (currently always reports success for basic notification tracking)
+- Workflow status (success or failure from the triggering workflow)
 - Commit message
 - Timestamp (Discord notifications only)
 
 ### Workflow File
 
 The notification workflow is defined in `.github/workflows/notify_ci.yml` and runs automatically on:
-- Pushes to the `main` branch
-- Pull requests targeting the `main` branch
+- Completion of the "CI — Build Sample Investor PDF (Smoke Test)" workflow
 - Manual trigger via workflow dispatch
 
 Both Slack and Discord notifications are optional and will only be sent if the corresponding webhook URL secret is configured. The workflow will continue to run successfully even if no webhooks are configured.
