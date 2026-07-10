@@ -1,4 +1,19 @@
-.PHONY: notify
+.PHONY: notify new-project help
+
+help:
+	@echo "Available targets:"
+	@echo "  make notify          - Run manual pipeline checks"
+	@echo "  make new-project     - Create a new project (will prompt for name)"
+	@echo "  make help            - Show this help message"
+
+new-project:
+	@if [ -z "$$PROJECT_NAME" ]; then \
+		read -p "Enter project name: " project_name; \
+		./scripts/new_project.sh "$$project_name"; \
+	else \
+		./scripts/new_project.sh "$$PROJECT_NAME"; \
+	fi
+
 notify:
 	@echo "Running manual pipeline checks..."
 	@if [ -z "$$SLACK_WEBHOOK_URL" ]; then \
